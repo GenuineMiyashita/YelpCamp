@@ -35,13 +35,12 @@ router.post('/login', passport.authenticate('local', { failureFlash: true, failu
     res.redirect(redirectUrl);
 })
 
-module.exports.isLoggedIn = (req, res, next) => {
-    if (!req.isAuthenticated()) {
-        req.session.returnTo = req.originalUrl
-        req.flash('error', 'You must be signed in first!');
-        return res.redirect('/login');
-    }
-    next();
-}
+router.get('/logout', (req, res, next) => {
+    req.logout(function(err) {
+      if (err) { return next(err); }
+      req.flash('success', "Goodbye!");
+      res.redirect('/campgrounds');
+    });
+  }); 
 
 module.exports = router;
