@@ -20,9 +20,11 @@ const mongoSanitize = require("express-mongo-sanitize");
 const userRoutes = require("./routes/users");
 const campgroundRoutes = require("./routes/campgrounds");
 const reviewRoutes = require("./routes/reviews");
-const dbUrl = process.env.DB_URL; //Atlas DB
 
-mongoose.connect("mongodb://127.0.0.1:27017/yelp-camp");
+const MongoStore = require("connect-mongo");
+
+const dbUrl = process.env.DB_URL || "mongodb://127.0.0.1:27017/yelp-camp";
+mongoose.connect(dbUrl);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -45,8 +47,24 @@ app.use(
   })
 );
 
+const secret = process.env.SECRET || "squirrel";
+
+const store = MongoStore.create({
+  mongoUrl: dbUrl,
+  touchAfter: 24 * 60 * 60,
+  crypto: {
+    secret,
+  },
+});
+
+store.on("error", function (e) {
+  console.log("Session store error!", e);
+});
+
 const sessionConfig = {
-  secret: "password",
+  store,
+  name: "session",
+  secret,
   resave: false,
   saveUninitialized: true,
   cookie: {
